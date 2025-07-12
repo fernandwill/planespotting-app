@@ -15,5 +15,7 @@ VALUES
 
 -- Use single column '' for DB --
 
+-- Adding description to photos --
+ALTER TABLE photos ADD COLUMN description TEXT;
 
 

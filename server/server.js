@@ -16,6 +16,7 @@ app.use(cors())
 // This make the folder publicly accessible at /images // Static file routing to serve images
 app.use("/images", express.static(path.join(__dirname, "images")))
 
+// const photos which are arrays [] with id, filename, and alt text for each photos
 const photos = [
     {
         id: "1",
@@ -49,6 +50,36 @@ const storage = multer.diskStorage({
 })
 
 const upload = multer({storage})
+
+const handleUpload = async e => {
+    e.preventDefault()
+
+    const formData = new FormData()
+    formData.append("images", selectedFile)
+    formData.append("alt", alt)
+    formData.append("description", desc)
+    formData.append("watermark", watermark)
+
+    const res = await fetch("http://localhost:773/upload", {
+        method: "POST",
+        body: formData
+})
+
+if (res.ok) {
+    const data = await res.json()
+    setPhotos(prev => [...prev, {
+        filename: data.filename,
+        alt,
+        description: desc
+    }])
+    setSelectedFile(null)
+    setAlt("")
+    setDesc("")
+    setWatermark(false)
+    } else {
+    alert("Upload failed.")
+    }
+}
 
 const handleDelete = async (filename) => {
     const res = await fetch(`http://localhost:773/api/photos/${filename}`, {
