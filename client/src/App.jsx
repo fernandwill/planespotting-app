@@ -68,6 +68,28 @@ function App () {
     }
   }
 
+  // Hold filename that is being deleted
+  const [deleting, setDeleting] = useState(null) 
+
+  const handleDelete = async (filename) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this photo?")
+    if (!confirmDelete) return
+
+    setDeleting(filename) // Mark as deleting
+
+    const res = await fetch(`http://localhost:773/api/photos/${filename}`, {
+      method: "DELETE"
+    })
+
+    if (res.ok) {
+      setPhotos(prev => prev.filter(photo => photo.filename !== filename))
+    } else {
+      alert("Failed to delete photo.")
+    }
+
+    setDeleting(null) // Clear after done
+  }
+
   return ( 
     <div className="app">
       <header>
@@ -139,10 +161,14 @@ function App () {
             src={`http://localhost:773/images/${photo.filename}`}
             alt={photo.alt}
             />
+            {deleting === photo.filename ? (
+              <span className="del-text">Deleting...</span>
+            ) : (
             <button className="delete-btn" data-testid="del-btn" onClick={() => handleDelete(photo.filename)}><FaTrashAlt size={16}/></button>
+            )}
             </div>
             <p>{photo.alt}</p>
-            </div>
+          </div>
           ))}
         </div>
       </section>
