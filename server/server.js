@@ -14,9 +14,6 @@ const PORT = 773
 app.use(express.json())
 app.use(cors())
 
-// This make the folder publicly accessible at /images // Static file routing to serve images
-app.use("/images", express.static(path.join(__dirname, "images")))
-
 // const photos which are arrays [] with id, filename, and alt text for each photos
 const photos = [
     {
@@ -38,6 +35,8 @@ const photos = [
       },
 ]
 
+const upload = multer({storage})
+
 // Storage config
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -49,8 +48,6 @@ const storage = multer.diskStorage({
         cb(null, uniqueName)
     }
 })
-
-const upload = multer({storage})
 
 const handleUpload = async e => {
     e.preventDefault()
@@ -94,6 +91,9 @@ const handleDelete = async (filename) => {
     }
 }
 
+// This make the folder publicly accessible at /images // Static file routing to serve images
+app.use("/images", express.static(path.join(__dirname, "images")))
+
 // Basic routing
 app.get("/", (req, res) => {
     res.send("Planespotting API is live ✈️")
@@ -109,12 +109,17 @@ app.get("/api/photos", async (req, res) => {
     }
 })
 
-app.post("/api/upload", upload.single("images"), async (req, res) => {
+app.post("/upload", upload.single("images"), async (req, res) => {
     try {
-        const { alt, desc, watermark, position, cropX, cropY, cropWidth, cropHeight } = req.body
-        const filename = req.file.filename
+        const { alt, desc, watermark, position } = req.body
+        const file = req.file
+
+        if (!file) {
+          return res.status(400).json({error: "No file uploaded."})
+        }
+
         const outputFilename = `${Date.now()}-${file.originalname}`
-        const outputPath = path.join(__dirname, "uploads", outputFilename)
+        const outputPath = path.join(__dirname, "images", outputFilename)
 
         if (watermark == "true") {
             const watermarkPath = path.join(__dirname, "watermark.png")
@@ -158,7 +163,7 @@ app.post("/api/upload", upload.single("images"), async (req, res) => {
         // Save to DB here if needed
         res.json({success: true, filename: outputFilename})
     } catch (err) {
-        console.error(err)
+        console.error("Upload error:", err)
         res.status(500).json({error: "Upload failed."})
     }
 })
