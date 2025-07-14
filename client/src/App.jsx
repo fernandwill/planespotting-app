@@ -17,6 +17,15 @@ function App () {
   const [watermark, setWatermark] = useState(false)
   const [showModal, setShowModal] = useState(false)
 
+  // Show a modal confirmation
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false)
+
+  // Hold filename that is being deleted
+  const [deleting, setDeleting] = useState(null) 
+
+
   // Fetch photos on load
 
   useEffect(() => {
@@ -39,7 +48,13 @@ function App () {
   // Handle upload
 
   const handleUpload = async (e) => {
+    setShowConfirmationModal(false) // Hide confirm modal
     e.preventDefault()
+
+    if (!selectedFile) {
+      alert("Please select a file before uploading.")
+      return
+    }
 
     const formData = new FormData()
     formData.append("images", selectedFile)
@@ -63,13 +78,13 @@ function App () {
       setAlt("")
       setDesc("")
       setWatermark(false)
+      setShowSuccessModal(true)
+      setTimeout(() => setShowSuccessModal(false), 10000) // Hide after 10 seconds 
+      setShowModal(false)
     } else {
       alert("Upload failed.")
     }
   }
-
-  // Hold filename that is being deleted
-  const [deleting, setDeleting] = useState(null) 
 
   const handleDelete = async (filename) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this photo?")
@@ -142,12 +157,53 @@ function App () {
             </label>
 
             <div className="modal-actions">
-              <button className="modal-upload" onClick={handleUpload}>Upload</button>
-              <button className="modal-cancel" onClick={() => setShowModal(false)}>Cancel</button>
+              <button 
+              className="modal-upload" 
+              disabled={!fileInputRef.current?.files?.length} 
+              onClick={() => { 
+                setShowConfirmationModal(true)
+                }}>
+                  Upload
+              </button>
+
+              <button className="modal-cancel" onClick={() => { 
+                setSelectedFile(null)
+                fileInputRef.current.value = null
+                setShowModal(false)
+                setAlt("")
+                setDesc("")
+                setWatermark(false)
+                setShowConfirmationModal(false)
+                }}>
+                  Cancel
+              </button>
             </div>
           </div>
         </div>
       )}
+      
+      {showSuccessModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Photo Uploaded!</h2>
+            <p>Your photo has been successfully added to the gallery.</p>
+            <button onClick={() => setShowSuccessModal(false)}>OK</button>
+          </div>
+        </div>
+      )}
+
+      {showConfirmationModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Confirm Upload</h2>
+            <p>Are you sure you want to upload this photo?</p>
+            <div className="modal-actions">
+              <button onClick={handleUpload}>✅</button>
+              <button onClick={() => setShowConfirmationModal(false)}>❌</button>
+            </div>
+          </div>
+        </div>
+        )}
 
       <section className="gallery">
         <h2>Sample Photos</h2>
