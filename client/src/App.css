@@ -1,8 +1,5 @@
-.app {
-  font-family: Arial, sans-serif;
-  padding: 2rem;
-  max-width: 900px;
-  margin: auto;
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 header {
@@ -17,17 +14,11 @@ header {
 
 .photo-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
   padding: 1rem;
-}
-
-.photo-grid img {
-  width: 600px;
-  height: 300px;
-  object-fit: cover; /* Cropping image without stretching */
-  border-radius: 8px;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .photo-card {
@@ -35,19 +26,25 @@ header {
   flex-direction: column;
   align-items: center;
   position: relative;
+  width: 100%;
+  overflow: hidden;
 }
 
 .photo-wrapper {
   position: relative;
   width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
 }
 
+.photo-grid img,
 .photo-wrapper img {
   width: 100%;
-  height: 200px;
+  height: 100%;
   object-fit: cover;
   border-radius: 8px;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+  display: block;
 }
 
 .upload-btn {
@@ -96,9 +93,11 @@ button:disabled {
   gap: 12px;
   max-height: 90vh;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
-.modal input[type="text"], input[type="file"] {
+.modal input[type="text"],
+.modal input[type="file"] {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 6px;
@@ -111,19 +110,19 @@ button:disabled {
 }
 
 .modal-upload {
-background-color: #007bff;
+  background-color: #007bff;
 }
 
 .modal-upload:hover {
-background-color: #0056b3;
+  background-color: #0056b3;
 }
 
 .modal-cancel {
-background-color: red;
+  background-color: red;
 }
 
 .modal-cancel:hover {
-background-color: #dc3545;
+  background-color: #dc3545;
 }
 
 .upload-sucess {
@@ -168,7 +167,7 @@ background-color: #dc3545;
   right: 8px;
 }
 
-.photo-wrapper:hover {
+.photo-wrapper:hover .delete-btn {
   opacity: 1;
 }
 
@@ -219,4 +218,12 @@ background-color: #dc3545;
 .watermark-preview.bottom-right {
   bottom: 10px;
   right: 10px;
+}
+
+html, body, .app {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  max-width: 100vw;
+  overflow-x: hidden !important;
 }
