@@ -77,7 +77,8 @@ function App () {
     formData.append("images", selectedFile)
     formData.append("alt", alt)
     formData.append("description", desc)
-    formData.append("watermark", watermark)
+    formData.append("watermark", watermark) // true/fase
+    formData.append("position", watermarkPosition)
 
     const res = await fetch("http://localhost:773/upload", {
       method: "POST",

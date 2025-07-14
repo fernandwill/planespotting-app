@@ -3,6 +3,7 @@
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
+const sharp = require("sharp");
 const fs = require("fs");
 const path = require("path");
 const pool = require("./db"); 
@@ -108,22 +109,60 @@ app.get("/api/photos", async (req, res) => {
     }
 })
 
-app.post("/upload", upload.single("images"), async (req, res) => {
+app.post("/api/upload", upload.single("images"), async (req, res) => {
     try {
-        const { alt } = req.body
+        const { alt, desc, watermark, position, cropX, cropY, cropWidth, cropHeight } = req.body
         const filename = req.file.filename
-        
-        await pool.query (
-            'INSERT INTO photos (filename, alt) VALUES ($1, $2)',
-            [filename, alt]
-        )
+        const outputFilename = `${Date.now()}-${file.originalname}`
+        const outputPath = path.join(__dirname, "uploads", outputFilename)
 
-        res.status(200).json({message: "Image(s) uploaded successfully", filename})
+        if (watermark == "true") {
+            const watermarkPath = path.join(__dirname, "watermark.png")
+            const watermarkBuffer = await sharp(watermarkPath).resize(100).toBuffer()
+
+            const image = sharp(file.path)
+            const {width, height} = await image.metadata()
+
+            // Calculate watermark position
+            let left = 10, top = 10
+            switch (position) {
+                case "top-right":
+                    left = width - 110
+                    break
+                case "bottom-left":
+                    top = height - 110
+                    break
+                case "bottom-right":
+                    left = width - 110
+                    top = height - 110
+                    break
+                case "center":
+                    left = Math.floor((width - 100) / 2)
+                    top = Math.floor((height - 100) / 2)
+                    break
+
+                    default: break
+            }
+
+            await image
+            .composite([{ input: watermarkBuffer, top, left}])
+            .toFile(outputPath)
+        } else {
+            // Just move file as-is if no watermark
+            fs.renameSync(file.path, outputPath)
+        }
+
+        // Delete temp file if exists
+        if (fs.existsSync(file.path)) fs.unlinkSync(file.path)
+
+        // Save to DB here if needed
+        res.json({success: true, filename: outputFilename})
     } catch (err) {
-        console.error(err) 
+        console.error(err)
         res.status(500).json({error: "Upload failed."})
     }
 })
+
 
 app.delete("/api/photos/:filename", async (req, res) => {
     const { filename } = req.params
