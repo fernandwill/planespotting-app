@@ -16,11 +16,18 @@ function App () {
   const [desc, setDesc] = useState("")
   const [watermark, setWatermark] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
 
   // Show a modal confirmation
   const [showSuccessModal, setShowSuccessModal] = useState(false)
 
   const [showConfirmationModal, setShowConfirmationModal] = useState(false)
+
+  // Storing watermark preview and position
+  const [watermarkPosition, setWatermarkPosition] = useState("bottom-right") // or we can use "center", "top-left", etc depending on preference
+  
+  // Watermark image
+  const watermarkImage = "./watermark.png"
 
   // Hold filename that is being deleted
   const [deleting, setDeleting] = useState(null) 
@@ -35,6 +42,16 @@ function App () {
     .then(data => setPhotos(data))
     .catch(err => console.error("Error fetching photos", err))
   }, [])
+
+  // Prevent background scrolling when modal is open
+  
+  useEffect(() => {
+    if (showPreviewModal) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "auto"
+    }
+  }, [showPreviewModal])
 
   // File select
 
@@ -133,6 +150,28 @@ function App () {
             accept="images/*"
             onChange={handleFileSelect}
             />
+            
+            {selectedFile && (
+              <div className="preview-container">
+                <h4>Preview:</h4>
+                <div className="image-preview">
+                  <img
+                  src={URL.createObjectURL(selectedFile)}
+                  alt="Preview"
+                  className="preview-image"
+                />
+
+                {watermark && (
+                  <img
+                  src={watermarkImage}
+                  alt="Watermark"
+                  className={`watermark-preview ${watermarkPosition}`}
+                  />
+                )}
+              </div>
+            </div>
+            )}
+
             <input
             type="text"
             placeholder="Alt Text..."
@@ -140,6 +179,7 @@ function App () {
             onChange={(e) => setAlt(e.target.value)}
             required
             />
+
             <input
             type="text"
             placeholder="Description..."
@@ -155,6 +195,19 @@ function App () {
               />
               Add Watermark
             </label>
+
+            {watermark && (
+              <select
+              value={watermarkPosition}
+              onChange={(e) => setWatermarkPosition(e.target.value)}
+              >
+                <option value="top-left">Top Left</option>
+                <option value="top-right">Top Right</option>
+                <option value="center">Center</option>
+                <option value="bottom-left">Bottom Left</option>
+                <option value="bottom-right">Bottom Right</option>
+              </select>
+            )}
 
             <div className="modal-actions">
               <button 
@@ -178,6 +231,28 @@ function App () {
                   Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showPreviewModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Watermark Preview</h3>
+            <div className="image-preview">
+              <img src={URL.createObjectURL(selectedFile)}
+              alt="Preview"
+              className="preview-image"
+              />
+              {watermark && (
+                <img
+                src={watermarkImage}
+                alt="Watermark"
+                className={`watermark-preview ${watermarkPosition}`}
+                />
+              )}
+            </div>
+            <button onClick={() => setShowPreviewModal(false)}>Close</button>
           </div>
         </div>
       )}

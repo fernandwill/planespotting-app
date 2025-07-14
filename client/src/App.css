@@ -94,6 +94,8 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal input[type="text"], input[type="file"] {
@@ -168,4 +170,53 @@ background-color: #dc3545;
 
 .photo-wrapper:hover {
   opacity: 1;
+}
+
+.preview-container {
+  margin-top: 1rem;
+}
+
+.image-preview {
+  position: relative;
+  display: inline-block;
+}
+
+.preview-image {
+  max-width: 400px;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.watermark-preview {
+  position: absolute;
+  width: 80px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.watermark-preview.top-left {
+  top: 10px;
+  left: 10px;
+}
+
+.watermark-preview.top-right {
+  top: 10px;
+  right: 10px;
+}
+
+.watermark-preview.center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.watermark-preview.bottom-left {
+  bottom: 10px;
+  left: 10px;
+}
+
+.watermark-preview.bottom-right {
+  bottom: 10px;
+  right: 10px;
 }
