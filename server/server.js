@@ -50,8 +50,6 @@ const storage = multer.diskStorage({
 // Pass storage to multer
 const upload = multer({storage})
 
-const uploadDate = new Date()
-
 const handleUpload = async e => {
     e.preventDefault()
 
@@ -70,8 +68,8 @@ if (res.ok) {
     const data = await res.json()
     setPhotos(prev => [...prev, {
         filename: data.filename,
-        alt,
-        description: desc
+        alt: alt,
+        description: description
     }])
     setSelectedFile(null)
     setAlt("")
@@ -114,7 +112,7 @@ app.get("/api/photos", async (req, res) => {
 
 app.post("/upload", upload.single("images"), async (req, res) => {
     try {
-      const { alt, desc, watermark, position } = req.body
+      const { alt, description, watermark, position } = req.body
       const file = req.file
   
       if (!file) {
@@ -128,7 +126,7 @@ app.post("/upload", upload.single("images"), async (req, res) => {
       try {
         const result = await pool.query(
           "INSERT INTO photos (filename, alt, description) VALUES ($1, $2, $3) RETURNING *",
-          [outputFilename, alt, desc]
+          [outputFilename, alt, description]
         )
         insertedPhoto = result.rows[0]
       } catch (err) {
@@ -174,7 +172,13 @@ app.post("/upload", upload.single("images"), async (req, res) => {
       if (fs.existsSync(file.path)) fs.unlinkSync(file.path)
   
       // ✅ Return photo info (required by React app)
-      res.json({ success: true, photo: insertedPhoto })
+      res.json({ success: true, photo: {
+        id: insertedPhoto.id,
+        filename: outputFilename,
+        alt: alt,
+        description: description
+      } 
+    })
     } catch (err) {
       console.error("Upload error:", err)
       res.status(500).json({ error: "Upload failed." })

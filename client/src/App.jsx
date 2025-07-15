@@ -206,10 +206,6 @@ function App() {
                 )}
                 <div className="photo-overlay">
                   {photo.description && <div className="overlay-text">{photo.description}</div>}
-                  {photo.upload_date && (
-                    <div className="overlay-date">{new Date(photo.upload_date).toLocaleDateString()}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
