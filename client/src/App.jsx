@@ -51,7 +51,7 @@ function App() {
 
     if (res.ok) {
       const data = await res.json()
-      setPhotos(prev => [...prev, { filename: data.filename, alt, description: desc }])
+      setPhotos(prev => [...prev, data.photo])
       setSelectedFile(null)
       setAlt("")
       setDesc("")
@@ -191,7 +191,9 @@ function App() {
       <section className="gallery">
         <h2>Sample Photos</h2>
         <div className="photo-grid">
-          {photos.map(photo => (
+          {photos
+          .filter(photo => photo.filename && photo.alt && photo.id)
+          .map(photo => (
             <div key={photo.id} className="photo-card">
               <div className="photo-wrapper">
                 <img src={`http://localhost:773/images/${photo.filename}`} alt={photo.alt} />
@@ -202,8 +204,14 @@ function App() {
                     <FaTrashAlt size={16} />
                   </button>
                 )}
+                <div className="photo-overlay">
+                  {photo.description && <div className="overlay-text">{photo.description}</div>}
+                  {photo.upload_date && (
+                    <div className="overlay-date">{new Date(photo.upload_date).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
               </div>
-              <p>{photo.alt}</p>
             </div>
           ))}
         </div>

@@ -35,8 +35,6 @@ const photos = [
       },
 ]
 
-const upload = multer({storage})
-
 // Storage config
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -48,6 +46,11 @@ const storage = multer.diskStorage({
         cb(null, uniqueName)
     }
 })
+
+// Pass storage to multer
+const upload = multer({storage})
+
+const uploadDate = new Date()
 
 const handleUpload = async e => {
     e.preventDefault()
@@ -111,63 +114,73 @@ app.get("/api/photos", async (req, res) => {
 
 app.post("/upload", upload.single("images"), async (req, res) => {
     try {
-        const { alt, desc, watermark, position } = req.body
-        const file = req.file
-
-        if (!file) {
-          return res.status(400).json({error: "No file uploaded."})
-        }
-
-        const outputFilename = `${Date.now()}-${file.originalname}`
-        const outputPath = path.join(__dirname, "images", outputFilename)
-
-        if (watermark == "true") {
-            const watermarkPath = path.join(__dirname, "watermark.png")
-            const watermarkBuffer = await sharp(watermarkPath).resize(100).toBuffer()
-
-            const image = sharp(file.path)
-            const {width, height} = await image.metadata()
-
-            // Calculate watermark position
-            let left = 10, top = 10
-            switch (position) {
-                case "top-right":
-                    left = width - 110
-                    break
-                case "bottom-left":
-                    top = height - 110
-                    break
-                case "bottom-right":
-                    left = width - 110
-                    top = height - 110
-                    break
-                case "center":
-                    left = Math.floor((width - 100) / 2)
-                    top = Math.floor((height - 100) / 2)
-                    break
-
-                    default: break
-            }
-
-            await image
-            .composite([{ input: watermarkBuffer, top, left}])
-            .toFile(outputPath)
+      const { alt, desc, watermark, position } = req.body
+      const file = req.file
+  
+      if (!file) {
+        return res.status(400).json({ error: "No file uploaded." })
+      }
+  
+      const outputFilename = `${Date.now()}-${file.originalname}`
+      const outputPath = path.join(__dirname, "images", outputFilename)
+  
+      let insertedPhoto = null
+      try {
+        const result = await pool.query(
+          "INSERT INTO photos (filename, alt, description) VALUES ($1, $2, $3) RETURNING *",
+          [outputFilename, alt, desc]
+        )
+        insertedPhoto = result.rows[0]
+      } catch (err) {
+        if (err.code === "23505") {
+          console.log("Duplicate filename, skipping DB insertion.")
         } else {
-            // Just move file as-is if no watermark
-            fs.renameSync(file.path, outputPath)
+          throw err
         }
-
-        // Delete temp file if exists
-        if (fs.existsSync(file.path)) fs.unlinkSync(file.path)
-
-        // Save to DB here if needed
-        res.json({success: true, filename: outputFilename})
+      }
+  
+      if (watermark === "true") {
+        const watermarkPath = path.join(__dirname, "watermark.png")
+        const watermarkBuffer = await sharp(watermarkPath).resize(100).toBuffer()
+  
+        const image = sharp(file.path)
+        const { width, height } = await image.metadata()
+  
+        let left = 10, top = 10
+        switch (position) {
+          case "top-right":
+            left = width - 110
+            break
+          case "bottom-left":
+            top = height - 110
+            break
+          case "bottom-right":
+            left = width - 110
+            top = height - 110
+            break
+          case "center":
+            left = Math.floor((width - 100) / 2)
+            top = Math.floor((height - 100) / 2)
+            break
+          default:
+            break
+        }
+  
+        await image.composite([{ input: watermarkBuffer, top, left }]).toFile(outputPath)
+      } else {
+        fs.renameSync(file.path, outputPath)
+      }
+  
+      if (fs.existsSync(file.path)) fs.unlinkSync(file.path)
+  
+      // ✅ Return photo info (required by React app)
+      res.json({ success: true, photo: insertedPhoto })
     } catch (err) {
-        console.error("Upload error:", err)
-        res.status(500).json({error: "Upload failed."})
+      console.error("Upload error:", err)
+      res.status(500).json({ error: "Upload failed." })
     }
-})
-
+  })
+  
 
 app.delete("/api/photos/:filename", async (req, res) => {
     const { filename } = req.params
