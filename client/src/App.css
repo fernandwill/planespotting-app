@@ -40,6 +40,7 @@ header h1 {
   position: relative;
   width: 100%;
   overflow: hidden;
+  border-radius: 8px;
 }
 
 .photo-wrapper {
@@ -47,6 +48,7 @@ header h1 {
   width: 100%;
   aspect-ratio: 3 / 2;
   overflow: hidden;
+  border-radius: 8px;
 }
 
 .photo-grid img,
@@ -68,6 +70,8 @@ header h1 {
   color: #fff;
   padding: 8px;
   font-size: 0.9rem;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
 }
