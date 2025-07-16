@@ -9,10 +9,22 @@ const path = require("path");
 const pool = require("./db"); 
 const app = express();
 const PORT = 773
+const session = require("express-session")
 
 // Middleware to allow JSON parsing
 app.use(express.json())
-app.use(cors())
+
+app.use(cors({
+  origin: "http://localhost:5173", // Client URL
+  credentials: true
+}))
+
+app.use(session({
+  secret: "planespotting-secret", // Use a random secret if real case
+  resave: false,
+  saveUninitialized: true,
+  cookie: {secure: false} // Set to true if using HTTPS
+}))
 
 // const photos which are arrays [] with id, filename, and alt text for each photos
 const photos = [
@@ -34,6 +46,12 @@ const photos = [
         alt: "All Nippon Airways Boeing 777-300ER || JA784A",
       },
 ]
+
+// User config
+const USER = {
+  username: "admin",
+  password: "AirbusA330941"
+}
 
 // Storage config
 const storage = multer.diskStorage({
@@ -110,6 +128,27 @@ app.get("/api/photos", async (req, res) => {
     }
 })
 
+// Login route
+app.post("/login", (req, res) => {
+  const {username, password} = req.body;
+  if (username === USER.username && password === USER.password) {
+    req.session.user = username;
+    res.json({success: true});
+} else {
+  res.status(401).json({error: "Invalid credentials"});
+  }
+});
+
+// Logout route
+app.post("/logout", (req, res) => {
+  req.session.destroy()
+  res.json({success: true})
+})
+
+app.get("/check-auth", (req, res) => {
+  res.json({loggedIn: !!req.session.user})
+})
+
 app.post("/upload", upload.single("images"), async (req, res) => {
     try {
       const { alt, description, watermark, position } = req.body
@@ -117,6 +156,10 @@ app.post("/upload", upload.single("images"), async (req, res) => {
   
       if (!file) {
         return res.status(400).json({ error: "No file uploaded." })
+      }
+
+      if (!req.session.user) {
+        return res.status(403).json({error: "Not logged in."})
       }
   
       const outputFilename = `${Date.now()}-${file.originalname}`
@@ -188,6 +231,10 @@ app.post("/upload", upload.single("images"), async (req, res) => {
 
 app.delete("/api/photos/:filename", async (req, res) => {
     const { filename } = req.params
+
+    if (!req.session.user) {
+      return res.status(403).json({error: "Not logged in."})
+    }
 
     try {
         // Delete from database

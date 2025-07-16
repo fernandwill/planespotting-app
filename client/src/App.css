@@ -163,7 +163,7 @@ button:disabled {
 
 .zoom-modal {
   position: relative;
-  background: #fff;
+  background: rgba(0, 0, 0, 0.9);
   padding: 1.5rem;
   border-radius: 12px;
   max-width: 90vw;
@@ -197,6 +197,22 @@ button:disabled {
   align-items: center;
   display: flex;
   transition: opacity 0.2s ease-in-out, transform 0.2s;
+}
+
+.logout-div {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.logout-btn {
+  padding: 6px 12px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
 .close-btn:hover {

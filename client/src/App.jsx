@@ -21,12 +21,37 @@ function App() {
   const fileInputRef = useRef()
   const watermarkImage = "./watermark.png"
   const [zoomedPhoto, setZoomedPhoto] = useState(null)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [username, setUsername] = useState("")
+  const [password, setPassword] = useState("")
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
     fetch("http://localhost:773/api/photos")
       .then(res => res.json())
       .then(data => setPhotos(data))
       .catch(err => console.error("Error fetching photos", err))
+  }, [])
+
+  useEffect(() => {
+    const handleKeyCombo = e => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "l") {
+        e.preventDefault() 
+        setShowLoginModal(true)
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyCombo)
+    return () => window.removeEventListener("keydown", handleKeyCombo)
+  }, [])
+
+  useEffect(() => {
+    fetch("http://localhost:773/check-auth", {
+      credentials: "include"
+    })
+    .then(res => res.json())
+    .then(data => setIsLoggedIn(data.loggedIn))
+    .catch(() => setIsLoggedIn(false))
   }, [])
 
   const handleFileSelect = e => {
@@ -43,7 +68,7 @@ function App() {
     const formData = new FormData()
     formData.append("images", selectedFile)
     formData.append("alt", alt)
-    formData.append("description", desc)
+    formData.append("description", description)
     formData.append("watermark", watermark)
     formData.append("position", watermarkPosition)
 
@@ -86,6 +111,21 @@ function App() {
         <p>Gallery of photos I have snapped of planes around the world.</p>
       </header>
 
+      {isLoggedIn && (
+        <div className="logout-div">
+          <button className="logout-btn"
+          onClick={async () => {
+            await fetch("http://localhost:773/logout", {
+              method: "POST",
+              credentials: "include",
+            })
+            setIsLoggedIn(false)
+            alert("Logged out.")
+            }}
+          >Logout</button>
+        </div>
+      )}
+
       <input
         type="file"
         ref={fileInputRef}
@@ -93,13 +133,52 @@ function App() {
         style={{ display: "none" }}
         onChange={handleFileSelect}
       />
+      
+      {isLoggedIn && (
+        <button className="upload-btn" onClick={() => setShowModal(true)}>Upload</button>
+      )}
 
-      <button className="upload-btn" onClick={() => setShowModal(true)}>Upload</button>
+      {showLoginModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Login</h2>
+            <p>Username</p>
+            <input
+            type="text"
+            placeholder="Magic Word..."
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            />
+            <p>Password</p>
+            <input
+            type="text"
+            placeholder="Magic Word..."
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            />
+            <div className="modal-actions">
+              <button
+              onClick={async () => {
+                const res = await fetch("http://localhost:773/login", {method: "POST", headers: {"Content-Type": "application/json"}, credentials: "include", body: JSON.stringify({username, password})
+              })
 
+              if (res.ok) {
+                setIsLoggedIn(true)
+                setShowLoginModal(false)
+              } else {
+                alert ("Login failed.")
+              }
+            }}>Login</button>
+            <button
+            onClick={() => setShowLoginModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal">
-            <h2>Upload Photo(s)</h2>
+            <h2>Upload Photo</h2>
             <input type="file" ref={fileInputRef} accept="images/*" onChange={handleFileSelect} />
 
             {selectedFile && (
@@ -132,7 +211,7 @@ function App() {
             <div className="modal-actions">
               <button
                 className="modal-upload"
-                disabled={!fileInputRef.current?.files?.length}
+                disabled={!selectedFile}
                 onClick={() => setShowConfirmationModal(true)}>
                 Upload
               </button>
@@ -219,10 +298,14 @@ function App() {
                 {deleting === photo.filename ? (
                   <span className="del-text">Deleting...</span>
                 ) : (
-                  <button className="delete-btn" data-testid="del-btn" onClick={() => handleDelete(photo.filename)}>
-                    <FaTrashAlt size={16} />
-                  </button>
-                )}
+                  <>
+                  {isLoggedIn && (
+                    <button className="delete-btn" data-testid="del-btn" onClick={() => handleDelete(photo.filename)}>
+                      <FaTrashAlt size={16} />
+                    </button>
+                  )}
+                  </>
+                )}    
                 <div className="photo-overlay">
                   {photo.description && <div className="overlay-text">{photo.description}</div>}
                 </div>
