@@ -17,7 +17,8 @@ function App() {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [showConfirmationModal, setShowConfirmationModal] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
-  const [showToast, setShowToast] = useState(false)
+  const [toastVisible, setToastVisible] = useState(false)
+  const [toastHide, setToastHide] = useState(false)
   const [watermarkPosition, setWatermarkPosition] = useState("bottom-right")
   const [deleting, setDeleting] = useState(null)
   const fileInputRef = useRef()
@@ -60,8 +61,11 @@ function App() {
 
   const showToastMsg = (message, duration = 5000) => {
     setToastMessage(message)
-    setShowToast(true)
-    setTimeout(() => setShowToast(false), duration)
+    setToastVisible(true)
+    setToastHide(false)
+
+    setTimeout(() => setToastHide(true), duration - 500)
+    setTimeout(() => setToastVisible(false), duration)
   }
 
   const handleFileSelect = e => {
@@ -78,13 +82,14 @@ function App() {
     const formData = new FormData()
     formData.append("images", selectedFile)
     formData.append("alt", alt)
-    formData.append("description", description)
+    formData.append("description", desc)
     formData.append("watermark", watermark)
     formData.append("position", watermarkPosition)
 
     const res = await fetch("http://localhost:773/upload", {
       method: "POST",
-      body: formData
+      body: formData,
+      credentials: "include"
     })
 
     if (res.ok) {
@@ -297,8 +302,8 @@ function App() {
         </div>
       )}
 
-      {showToast && (
-        <div className="toast-msg">
+      {toastVisible && (
+        <div className={`toast-msg ${toastHide ? "hide" : ""}`}>
           {toastMessage}
         </div>
       )}
