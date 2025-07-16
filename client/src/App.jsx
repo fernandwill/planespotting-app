@@ -129,14 +129,14 @@ function App() {
   }
 
   const handleDelete = async filename => {
-
     setDeleting(filename)
     const res = await fetch(`http://localhost:773/api/photos/${filename}`, { method: "DELETE", credentials: "include" })
-
+  
     if (res.ok) {
       setPhotos(prev => prev.filter(photo => photo.filename !== filename ))
+      setPageRefresh(prev => !prev)
     } else showToastMsg("Failed to delete photo.")
-
+  
     setDeleting(null)
   }
 
