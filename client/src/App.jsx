@@ -7,7 +7,9 @@ import { FiCheck } from "react-icons/fi"
 
 function App() {
   const [photos, setPhotos] = useState([])
-  const [file, setFile] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [fadeClass, setFadeClass] = useState("show")
   const [alt, setAlt] = useState("")
   const [selectedFile, setSelectedFile] = useState(null)
   const [desc, setDesc] = useState("")
@@ -16,6 +18,8 @@ function App() {
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [showConfirmationModal, setShowConfirmationModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [photoToDelete, setPhotoToDelete] = useState(null)
   const [toastMessage, setToastMessage] = useState("")
   const [toastVisible, setToastVisible] = useState(false)
   const [toastHide, setToastHide] = useState(false)
@@ -28,13 +32,21 @@ function App() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [pageRefresh, setPageRefresh] = useState(false)
 
   useEffect(() => {
-    fetch("http://localhost:773/api/photos")
+    fetch(`http://localhost:773/api/photos?page=${currentPage}&limit=8`)
       .then(res => res.json())
-      .then(data => setPhotos(data))
+      .then(data => {
+        const padded = [...data.photos]
+        while (padded.length < 8) {
+          padded.push(null)
+        }
+        setPhotos(padded)
+        setTotalPages(data.totalPages)
+      })
       .catch(err => console.error("Error fetching photos", err))
-  }, [])
+  }, [currentPage, pageRefresh])
 
   useEffect(() => {
     const handleKeyCombo = e => {
@@ -66,6 +78,14 @@ function App() {
 
     setTimeout(() => setToastHide(true), duration - 500)
     setTimeout(() => setToastVisible(false), duration)
+  }
+
+  const handlePageChange = (newPage) => {
+    setFadeClass("fade")
+    setTimeout(() => {
+      setCurrentPage(newPage)
+      setFadeClass("show")
+    }, 300)
   }
 
   const handleFileSelect = e => {
@@ -100,6 +120,7 @@ function App() {
       setDesc("")
       setWatermark(false)
       setShowSuccessModal(true)
+      setPageRefresh(prev => !prev)
       setTimeout(() => setShowSuccessModal(false), 10000)
       setShowModal(false)
     } else {
@@ -108,13 +129,13 @@ function App() {
   }
 
   const handleDelete = async filename => {
-    if (!window.confirm("Are you sure you want to delete this photo?")) return
 
     setDeleting(filename)
-    const res = await fetch(`http://localhost:773/api/photos/${filename}`, { method: "DELETE" })
+    const res = await fetch(`http://localhost:773/api/photos/${filename}`, { method: "DELETE", credentials: "include" })
 
-    if (res.ok) setPhotos(prev => prev.filter(photo => photo.filename !== filename))
-    else showToastMsg("Failed to delete photo.")
+    if (res.ok) {
+      setPhotos(prev => prev.filter(photo => photo.filename !== filename ))
+    } else showToastMsg("Failed to delete photo.")
 
     setDeleting(null)
   }
@@ -134,6 +155,7 @@ function App() {
               method: "POST",
               credentials: "include",
             })
+            setPageRefresh(prev => !prev)
             setIsLoggedIn(false)
             showToastMsg("Logged out.")
             }}
@@ -279,8 +301,32 @@ function App() {
             <h2>Confirm Upload</h2>
             <p>Are you sure you want to upload this photo?</p>
             <div className="modal-actions">
-              <button onClick={handleUpload}><FiCheck size={16}/></button>
-              <button onClick={() => setShowConfirmationModal(false)}><RxCross2 size={16}/></button>
+              <button onClick={handleUpload}>Upload</button>
+              <button onClick={() => setShowConfirmationModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && photoToDelete && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Confirm Deletion</h3>
+            <p>Are you sure you want to delete this photo?</p>
+            <div className="modal-actions">
+              <button
+              className="modal-upload"
+              onClick={() => {
+                handleDelete(photoToDelete.filename)
+                setShowDeleteModal(false)
+                setPhotoToDelete(null)
+              }}>Confirm</button>
+              <button 
+                className="modal-cancel"
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setPhotoToDelete(null)
+                }}>Cancel</button>
             </div>
           </div>
         </div>
@@ -310,11 +356,10 @@ function App() {
 
       <section className="gallery">
         <h2>Showcase Gallery</h2>
-        <div className="photo-grid">
-          {photos
-          .filter(photo => photo.filename && photo.alt && photo.id)
-          .map(photo => (
-            <div key={photo.id} className="photo-card">
+        <div key={currentPage} className={`photo-grid ${fadeClass}`}>
+          {photos.map((photo, i) => (
+            <div key={photo?.id || `placeholder-${i}`} className="photo-card">
+              {photo ? (
               <div className="photo-wrapper">
                 <img src={`http://localhost:773/images/${photo.filename}`} alt={photo.alt} onClick={() => setZoomedPhoto(photo)} style={{cursor: "zoom-in"}} />
                 {deleting === photo.filename ? (
@@ -322,7 +367,10 @@ function App() {
                 ) : (
                   <>
                   {isLoggedIn && (
-                    <button className="delete-btn" data-testid="del-btn" onClick={() => handleDelete(photo.filename)}>
+                    <button className="delete-btn" data-testid="del-btn" onClick={() => {
+                      setPhotoToDelete(photo)
+                      setShowDeleteModal(true)
+                    }}>
                       <FaTrashAlt size={16} />
                     </button>
                   )}
@@ -332,10 +380,25 @@ function App() {
                   {photo.description && <div className="overlay-text">{photo.description}</div>}
                 </div>
               </div>
+            ) : (
+              <div className="photo-wrapper empty-slot" />
+            )}
             </div>
           ))}
         </div>
       </section>
+
+      <div className="pagination">
+        <button
+        disabled={currentPage === 1}
+        onClick={() => setCurrentPage(prev => prev -1)}
+        >Prev</button>
+        <span>Page {currentPage} of {totalPages}</span>
+        <button
+        disabled={currentPage === totalPages}
+        onClick={() => setCurrentPage(prev => prev + 1)}
+        >Next</button>
+      </div>
 
       <section className="footer">
         <footer>

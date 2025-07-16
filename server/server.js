@@ -123,9 +123,23 @@ app.get("/check-auth", (req, res) => {
 })
 
 app.get("/api/photos", async (req, res) => {
+  const page = parseInt(req.query.page) || 1
+  const limit = parseInt(req.query.limit) || 8
+  const offset = (page - 1) * limit
     try {
-        const result = await pool.query("SELECT * FROM photos")
-        res.json(result.rows)
+        const result = await pool.query("SELECT * FROM photos ORDER BY id DESC LIMIT $1 OFFSET $2", [limit, offset]
+        )
+
+        const countResult = await pool.query("SELECT COUNT(*) FROM photos")
+        const totalPhotos = parseInt(countResult.rows[0].count)
+        const totalPages = Math.ceil(totalPhotos / limit)
+
+        res.json ({
+          photos: result.rows,
+          currentPage: page,
+          totalPages,
+          totalPhotos
+        })
     } catch (err) {
         console.error(err)
         res.status(500).send("Server error")

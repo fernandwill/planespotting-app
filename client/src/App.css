@@ -30,7 +30,18 @@ header h1 {
   gap: 1rem;
   padding: 1rem;
   width: 100%;
+  min-height: 600px;
   box-sizing: border-box;
+}
+
+.photo-grid.fade {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.photo-grid.show {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
 }
 
 .photo-card {
@@ -46,9 +57,18 @@ header h1 {
 .photo-wrapper {
   position: relative;
   width: 100%;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   border-radius: 8px;
+}
+
+.photo-wrapper.empty-slot {
+  visibility: hidden;
+}
+
+.empty-slot {
+  background: transparent;
+  visibility: hidden;
 }
 
 .photo-grid img,
@@ -336,6 +356,26 @@ button:disabled {
 @keyframes fadein {
   from {opacity: 0; transform: translateX(-50%) translateY(-10px);}
   to {opacity: 1; transform: translateX(-50%) translateY(0);}
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .footer {
