@@ -2,6 +2,8 @@
 import { useEffect, useState, useRef } from "react"
 import "./App.css"
 import { FaTrashAlt } from "react-icons/fa"
+import { RxCross2 } from "react-icons/rx"
+import { FiCheck } from "react-icons/fi"
 
 function App() {
   const [photos, setPhotos] = useState([])
@@ -18,6 +20,7 @@ function App() {
   const [deleting, setDeleting] = useState(null)
   const fileInputRef = useRef()
   const watermarkImage = "./watermark.png"
+  const [zoomedPhoto, setZoomedPhoto] = useState(null)
 
   useEffect(() => {
     fetch("http://localhost:773/api/photos")
@@ -181,22 +184,38 @@ function App() {
             <h2>Confirm Upload</h2>
             <p>Are you sure you want to upload this photo?</p>
             <div className="modal-actions">
-              <button onClick={handleUpload}>✅</button>
-              <button onClick={() => setShowConfirmationModal(false)}>❌</button>
+              <button onClick={handleUpload}><FiCheck size={16}/></button>
+              <button onClick={() => setShowConfirmationModal(false)}><RxCross2 size={16}/></button>
             </div>
           </div>
         </div>
       )}
 
+      {zoomedPhoto && (
+        <div className="modal-overlay" onClick={() => setZoomedPhoto(null)}>
+          <div className="zoom-modal" onClick={e => e.stopPropagation()}>
+            <button className="close-btn" onClick={() => setZoomedPhoto(null)}><RxCross2 size={16}/></button>
+            <img
+            src={`http://localhost:773/images/${zoomedPhoto.filename}`}
+            alt={zoomedPhoto.alt}
+            className="zoomed-image"
+            />
+            {zoomedPhoto.description && (
+              <p style={{ color: "#555", marginTop: "1rem" }}>{zoomedPhoto.description}</p>
+            )}
+          </div>
+        </div>
+      )}
+
       <section className="gallery">
-        <h2>Sample Photos</h2>
+        <h2>Showcase Gallery</h2>
         <div className="photo-grid">
           {photos
           .filter(photo => photo.filename && photo.alt && photo.id)
           .map(photo => (
             <div key={photo.id} className="photo-card">
               <div className="photo-wrapper">
-                <img src={`http://localhost:773/images/${photo.filename}`} alt={photo.alt} />
+                <img src={`http://localhost:773/images/${photo.filename}`} alt={photo.alt} onClick={() => setZoomedPhoto(photo)} style={{cursor: "zoom-in"}} />
                 {deleting === photo.filename ? (
                   <span className="del-text">Deleting...</span>
                 ) : (
