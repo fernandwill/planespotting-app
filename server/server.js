@@ -118,6 +118,10 @@ app.get("/", (req, res) => {
     res.send("Planespotting API is live ✈️")
 })
 
+app.get("/check-auth", (req, res) => {
+  res.json({loggedIn: !!req.session.user})
+})
+
 app.get("/api/photos", async (req, res) => {
     try {
         const result = await pool.query("SELECT * FROM photos")

@@ -16,6 +16,8 @@ function App() {
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [showConfirmationModal, setShowConfirmationModal] = useState(false)
+  const [toastMessage, setToastMessage] = useState("")
+  const [showToast, setShowToast] = useState(false)
   const [watermarkPosition, setWatermarkPosition] = useState("bottom-right")
   const [deleting, setDeleting] = useState(null)
   const fileInputRef = useRef()
@@ -35,24 +37,32 @@ function App() {
 
   useEffect(() => {
     const handleKeyCombo = e => {
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "l") {
-        e.preventDefault() 
+      if (!isLoggedIn && e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "l") {
         setShowLoginModal(true)
       }
     }
 
     window.addEventListener("keydown", handleKeyCombo)
     return () => window.removeEventListener("keydown", handleKeyCombo)
-  }, [])
+  }, [isLoggedIn])
 
   useEffect(() => {
     fetch("http://localhost:773/check-auth", {
       credentials: "include"
     })
     .then(res => res.json())
-    .then(data => setIsLoggedIn(data.loggedIn))
+    .then(data => {
+      console.log("Check-auth result:", data);
+      setIsLoggedIn(data.loggedIn)
+    })
     .catch(() => setIsLoggedIn(false))
   }, [])
+
+  const showToastMsg = (message, duration = 5000) => {
+    setToastMessage(message)
+    setShowToast(true)
+    setTimeout(() => setShowToast(false), duration)
+  }
 
   const handleFileSelect = e => {
     const file = e.target.files[0]
@@ -63,7 +73,7 @@ function App() {
     setShowConfirmationModal(false)
     e.preventDefault()
 
-    if (!selectedFile) return alert("Please select a file before uploading.")
+    if (!selectedFile) return showToastMsg("Please select a file before uploading.")
 
     const formData = new FormData()
     formData.append("images", selectedFile)
@@ -88,7 +98,7 @@ function App() {
       setTimeout(() => setShowSuccessModal(false), 10000)
       setShowModal(false)
     } else {
-      alert("Upload failed.")
+      showToastMsg("Upload failed.")
     }
   }
 
@@ -99,7 +109,7 @@ function App() {
     const res = await fetch(`http://localhost:773/api/photos/${filename}`, { method: "DELETE" })
 
     if (res.ok) setPhotos(prev => prev.filter(photo => photo.filename !== filename))
-    else alert("Failed to delete photo.")
+    else showToastMsg("Failed to delete photo.")
 
     setDeleting(null)
   }
@@ -120,7 +130,7 @@ function App() {
               credentials: "include",
             })
             setIsLoggedIn(false)
-            alert("Logged out.")
+            showToastMsg("Logged out.")
             }}
           >Logout</button>
         </div>
@@ -144,14 +154,14 @@ function App() {
             <h2>Login</h2>
             <p>Username</p>
             <input
-            type="text"
+            type="password"
             placeholder="Magic Word..."
             value={username}
             onChange={e => setUsername(e.target.value)}
             />
             <p>Password</p>
             <input
-            type="text"
+            type="password"
             placeholder="Magic Word..."
             value={password}
             onChange={e => setPassword(e.target.value)}
@@ -164,9 +174,10 @@ function App() {
 
               if (res.ok) {
                 setIsLoggedIn(true)
+                showToastMsg("Login success.")
                 setShowLoginModal(false)
               } else {
-                alert ("Login failed.")
+                showToastMsg("Login failed.")
               }
             }}>Login</button>
             <button
@@ -283,6 +294,12 @@ function App() {
               <p style={{ color: "#555", marginTop: "1rem" }}>{zoomedPhoto.description}</p>
             )}
           </div>
+        </div>
+      )}
+
+      {showToast && (
+        <div className="toast-msg">
+          {toastMessage}
         </div>
       )}
 
