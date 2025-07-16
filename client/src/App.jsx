@@ -3,7 +3,6 @@ import { useEffect, useState, useRef } from "react"
 import "./App.css"
 import { FaTrashAlt } from "react-icons/fa"
 import { RxCross2 } from "react-icons/rx"
-import { FiCheck } from "react-icons/fi"
 
 function App() {
   const [photos, setPhotos] = useState([])
@@ -356,7 +355,7 @@ function App() {
 
       <section className="gallery">
         <h2>Showcase Gallery</h2>
-        <div key={currentPage} className={`photo-grid ${fadeClass}`}>
+        <div className={`photo-grid ${fadeClass}`}>
           {photos.map((photo, i) => (
             <div key={photo?.id || `placeholder-${i}`} className="photo-card">
               {photo ? (
@@ -391,12 +390,12 @@ function App() {
       <div className="pagination">
         <button
         disabled={currentPage === 1}
-        onClick={() => setCurrentPage(prev => prev -1)}
+        onClick={() => handlePageChange(currentPage - 1)}
         >Prev</button>
         <span>Page {currentPage} of {totalPages}</span>
         <button
         disabled={currentPage === totalPages}
-        onClick={() => setCurrentPage(prev => prev + 1)}
+        onClick={() => handlePageChange(currentPage + 1)}
         >Next</button>
       </div>
 
