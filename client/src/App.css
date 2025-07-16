@@ -299,6 +299,15 @@ button:disabled {
   right: 10px;
 }
 
+.footer {
+  text-align: center;
+  padding: 1.5rem 0;
+  color: #666;
+  font-size: 0.9rem;
+  border-top: 1px solid #eaeaea;
+  margin-top: 3rem;
+}
+
 html, body, .app {
   margin: 0;
   padding: 0;

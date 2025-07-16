@@ -231,6 +231,13 @@ function App() {
           ))}
         </div>
       </section>
+
+      <section className="footer">
+        <footer>
+          <p>© Fernand William Citra</p>
+          <p>Made to showcase the engineering marvel of humanity.</p>
+        </footer>
+      </section>
     </div>
   )
 }
