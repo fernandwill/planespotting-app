@@ -1,174 +1,185 @@
 // client/App.jsx
-import { useEffect, useState, useRef } from "react"
-import "./App.css"
-import { FaTrashAlt } from "react-icons/fa"
-import { RxCross2, RxMoon, RxSun } from "react-icons/rx"
+import { useEffect, useState, useRef } from "react";
+import "./App.css";
+import { FaTrashAlt } from "react-icons/fa";
+import { RxCross2, RxMoon, RxSun } from "react-icons/rx";
 
 function App() {
-  const [photos, setPhotos] = useState([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [fadeClass, setFadeClass] = useState("show")
-  const [alt, setAlt] = useState("")
-  const [selectedFile, setSelectedFile] = useState(null)
-  const [desc, setDesc] = useState("")
-  const [watermark, setWatermark] = useState(false)
-  const [showModal, setShowModal] = useState(false)
-  const [showPreviewModal, setShowPreviewModal] = useState(false)
-  const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [showConfirmationModal, setShowConfirmationModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [photoToDelete, setPhotoToDelete] = useState(null)
-  const [toastMessage, setToastMessage] = useState("")
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastHide, setToastHide] = useState(false)
-  const [watermarkPosition, setWatermarkPosition] = useState("bottom-right")
-  const [deleting, setDeleting] = useState(null)
-  const fileInputRef = useRef()
-  const watermarkImage = "./watermark.png"
-  const [zoomedPhoto, setZoomedPhoto] = useState(null)
-  const [showLoginModal, setShowLoginModal] = useState(false)
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [pageRefresh, setPageRefresh] = useState(false)
-  const [theme, setTheme] = useState("light")
+  const [photos, setPhotos] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [fadeClass, setFadeClass] = useState("show");
+  const [alt, setAlt] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [desc, setDesc] = useState("");
+  const [watermark, setWatermark] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [photoToDelete, setPhotoToDelete] = useState(null);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastHide, setToastHide] = useState(false);
+  const [watermarkPosition, setWatermarkPosition] = useState("bottom-right");
+  const [deleting, setDeleting] = useState(null);
+  const fileInputRef = useRef();
+  const watermarkImage = "./watermark.png";
+  const [zoomedPhoto, setZoomedPhoto] = useState(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [pageRefresh, setPageRefresh] = useState(false);
+  const [theme, setTheme] = useState("light");
 
   useEffect(() => {
     // Initialize theme from localStorage or system preference
-    const savedTheme = localStorage.getItem("theme")
-    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-    
+    const savedTheme = localStorage.getItem("theme");
+    const systemPrefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+
     if (savedTheme) {
-      setTheme(savedTheme)
-      document.documentElement.setAttribute("data-theme", savedTheme)
+      setTheme(savedTheme);
+      document.documentElement.setAttribute("data-theme", savedTheme);
     } else if (systemPrefersDark) {
-      setTheme("dark")
-      document.documentElement.setAttribute("data-theme", "dark")
+      setTheme("dark");
+      document.documentElement.setAttribute("data-theme", "dark");
     } else {
-      setTheme("light")
-      document.documentElement.setAttribute("data-theme", "light")
+      setTheme("light");
+      document.documentElement.setAttribute("data-theme", "light");
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     // Update localStorage and document attribute when theme changes
-    localStorage.setItem("theme", theme)
-    document.documentElement.setAttribute("data-theme", theme)
-  }, [theme])
+    localStorage.setItem("theme", theme);
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     fetch(`http://localhost:773/api/photos?page=${currentPage}&limit=8`)
-      .then(res => res.json())
-      .then(data => {
-        const padded = [...data.photos]
+      .then((res) => res.json())
+      .then((data) => {
+        const padded = [...data.photos];
         while (padded.length < 8) {
-          padded.push(null)
+          padded.push(null);
         }
-        setPhotos(padded)
-        setTotalPages(data.totalPages)
+        setPhotos(padded);
+        setTotalPages(data.totalPages);
       })
-      .catch(err => console.error("Error fetching photos", err))
-  }, [currentPage, pageRefresh])
+      .catch((err) => console.error("Error fetching photos", err));
+  }, [currentPage, pageRefresh]);
 
   useEffect(() => {
-    const handleKeyCombo = e => {
-      if (!isLoggedIn && e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "l") {
-        setShowLoginModal(true)
+    const handleKeyCombo = (e) => {
+      if (
+        !isLoggedIn &&
+        e.ctrlKey &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "l"
+      ) {
+        setShowLoginModal(true);
       }
-    }
+    };
 
-    window.addEventListener("keydown", handleKeyCombo)
-    return () => window.removeEventListener("keydown", handleKeyCombo)
-  }, [isLoggedIn])
+    window.addEventListener("keydown", handleKeyCombo);
+    return () => window.removeEventListener("keydown", handleKeyCombo);
+  }, [isLoggedIn]);
 
   useEffect(() => {
     fetch("http://localhost:773/check-auth", {
-      credentials: "include"
+      credentials: "include",
     })
-    .then(res => res.json())
-    .then(data => {
-      console.log("Check-auth result:", data);
-      setIsLoggedIn(data.loggedIn)
-    })
-    .catch(() => setIsLoggedIn(false))
-  }, [])
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Check-auth result:", data);
+        setIsLoggedIn(data.loggedIn);
+      })
+      .catch(() => setIsLoggedIn(false));
+  }, []);
 
   const showToastMsg = (message, duration = 5000) => {
-    setToastMessage(message)
-    setToastVisible(true)
-    setToastHide(false)
+    setToastMessage(message);
+    setToastVisible(true);
+    setToastHide(false);
 
-    setTimeout(() => setToastHide(true), duration - 500)
-    setTimeout(() => setToastVisible(false), duration)
-  }
+    setTimeout(() => setToastHide(true), duration - 500);
+    setTimeout(() => setToastVisible(false), duration);
+  };
 
   const handlePageChange = (newPage) => {
-    setFadeClass("fade")
+    setFadeClass("fade");
     setTimeout(() => {
-      setCurrentPage(newPage)
-      setFadeClass("show")
-    }, 300)
-  }
+      setCurrentPage(newPage);
+      setFadeClass("show");
+    }, 300);
+  };
 
-  const handleFileSelect = e => {
-    const file = e.target.files[0]
-    if (file) setSelectedFile(file)
-  }
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) setSelectedFile(file);
+  };
 
-  const handleUpload = async e => {
-    setShowConfirmationModal(false)
-    e.preventDefault()
+  const handleUpload = async (e) => {
+    setShowConfirmationModal(false);
+    e.preventDefault();
 
-    if (!selectedFile) return showToastMsg("Please select a file before uploading.")
+    if (!selectedFile)
+      return showToastMsg("Please select a file before uploading.");
 
-    const formData = new FormData()
-    formData.append("images", selectedFile)
-    formData.append("alt", alt)
-    formData.append("description", desc)
-    formData.append("watermark", watermark)
-    formData.append("position", watermarkPosition)
+    const formData = new FormData();
+    formData.append("images", selectedFile);
+    formData.append("alt", alt);
+    formData.append("description", desc);
+    formData.append("watermark", watermark);
+    formData.append("position", watermarkPosition);
 
     const res = await fetch("http://localhost:773/upload", {
       method: "POST",
       body: formData,
-      credentials: "include"
-    })
+      credentials: "include",
+    });
 
     if (res.ok) {
-      const data = await res.json()
-      setPhotos(prev => [...prev, data.photo])
-      setSelectedFile(null)
-      setAlt("")
-      setDesc("")
-      setWatermark(false)
-      setShowSuccessModal(true)
-      setPageRefresh(prev => !prev)
-      setTimeout(() => setShowSuccessModal(false), 10000)
-      setShowModal(false)
+      const data = await res.json();
+      setPhotos((prev) => [...prev, data.photo]);
+      setSelectedFile(null);
+      setAlt("");
+      setDesc("");
+      setWatermark(false);
+      setShowSuccessModal(true);
+      setPageRefresh((prev) => !prev);
+      setTimeout(() => setShowSuccessModal(false), 10000);
+      setShowModal(false);
     } else {
-      showToastMsg("Upload failed.")
+      showToastMsg("Upload failed.");
     }
-  }
+  };
 
-  const handleDelete = async filename => {
-    setDeleting(filename)
-    const res = await fetch(`http://localhost:773/api/photos/${filename}`, { method: "DELETE", credentials: "include" })
-  
+  const handleDelete = async (filename) => {
+    setDeleting(filename);
+    const res = await fetch(`http://localhost:773/api/photos/${filename}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
     if (res.ok) {
-      setPhotos(prev => prev.filter(photo => photo.filename !== filename ))
-      setPageRefresh(prev => !prev)
-    } else showToastMsg("Failed to delete photo.")
-  
-    setDeleting(null)
-  }
+      setPhotos((prev) => prev.filter((photo) => photo.filename !== filename));
+      setPageRefresh((prev) => !prev);
+    } else showToastMsg("Failed to delete photo.");
+
+    setDeleting(null);
+  };
 
   const toggleTheme = () => {
-    setTheme(prevTheme => {
-      const newTheme = prevTheme === "light" ? "dark" : "light"
-      return newTheme
-    })
-  }
+    setTheme((prevTheme) => {
+      const newTheme = prevTheme === "light" ? "dark" : "light";
+      return newTheme;
+    });
+  };
 
   return (
     <div className="app">
@@ -176,7 +187,11 @@ function App() {
         <h1>My Planespotting Gallery</h1>
         <p>Gallery of photos I have snapped of planes around the world.</p>
         <div className="header-controls">
-          <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
+          <button
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+          >
             {theme === "light" ? <RxMoon size={20} /> : <RxSun size={20} />}
           </button>
         </div>
@@ -184,17 +199,20 @@ function App() {
 
       {isLoggedIn && (
         <div className="logout-div">
-          <button className="logout-btn"
-          onClick={async () => {
-            await fetch("http://localhost:773/logout", {
-              method: "POST",
-              credentials: "include",
-            })
-            setPageRefresh(prev => !prev)
-            setIsLoggedIn(false)
-            showToastMsg("Logged out.")
+          <button
+            className="logout-btn"
+            onClick={async () => {
+              await fetch("http://localhost:773/logout", {
+                method: "POST",
+                credentials: "include",
+              });
+              setPageRefresh((prev) => !prev);
+              setIsLoggedIn(false);
+              showToastMsg("Logged out.");
             }}
-          >Logout</button>
+          >
+            Logout
+          </button>
         </div>
       )}
 
@@ -205,9 +223,11 @@ function App() {
         style={{ display: "none" }}
         onChange={handleFileSelect}
       />
-      
+
       {isLoggedIn && (
-        <button className="upload-btn" onClick={() => setShowModal(true)}>Upload</button>
+        <button className="upload-btn" onClick={() => setShowModal(true)}>
+          Upload
+        </button>
       )}
 
       {showLoginModal && (
@@ -221,7 +241,7 @@ function App() {
                 type="text"
                 placeholder="Enter username..."
                 value={username}
-                onChange={e => setUsername(e.target.value)}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </div>
             <div>
@@ -231,25 +251,25 @@ function App() {
                 type="password"
                 placeholder="Enter password..."
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <div className="modal-actions">
               <button
                 onClick={async () => {
                   const res = await fetch("http://localhost:773/login", {
-                    method: "POST", 
-                    headers: {"Content-Type": "application/json"}, 
-                    credentials: "include", 
-                    body: JSON.stringify({username, password})
-                  })
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ username, password }),
+                  });
 
                   if (res.ok) {
-                    setIsLoggedIn(true)
-                    showToastMsg("Login success.")
-                    setShowLoginModal(false)
+                    setIsLoggedIn(true);
+                    showToastMsg("Login success.");
+                    setShowLoginModal(false);
                   } else {
-                    showToastMsg("Login failed.")
+                    showToastMsg("Login failed.");
                   }
                 }}
               >
@@ -260,57 +280,77 @@ function App() {
           </div>
         </div>
       )}
-      
+
       {showModal && (
         <div className="modal-overlay">
           <div className="modal">
             <h2>Upload Photo</h2>
-            <input type="file" ref={fileInputRef} accept="images/*" onChange={handleFileSelect} />
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="images/*"
+              onChange={handleFileSelect}
+            />
 
             {selectedFile && (
               <div className="preview-container">
                 <h4>Preview:</h4>
                 <div className="image-preview">
-                  <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="preview-image" />
-                  {watermark && <img src={watermarkImage} alt="Watermark" className={`watermark-preview ${watermarkPosition}`} />}
+                  <img
+                    src={URL.createObjectURL(selectedFile)}
+                    alt="Preview"
+                    className="preview-image"
+                  />
+                  {watermark && (
+                    <img
+                      src={watermarkImage}
+                      alt="Watermark"
+                      className={`watermark-preview ${watermarkPosition}`}
+                    />
+                  )}
                 </div>
               </div>
             )}
 
             <div>
               <label htmlFor="alt-text">Alt Text</label>
-              <input 
+              <input
                 id="alt-text"
-                type="text" 
-                placeholder="Alt Text..." 
-                value={alt} 
-                onChange={e => setAlt(e.target.value)} 
-                required 
+                type="text"
+                placeholder="Alt Text..."
+                value={alt}
+                onChange={(e) => setAlt(e.target.value)}
+                required
               />
             </div>
-            
+
             <div>
               <label htmlFor="description">Description</label>
-              <input 
+              <input
                 id="description"
-                type="text" 
-                placeholder="Description..." 
-                value={desc} 
-                onChange={e => setDesc(e.target.value)} 
+                type="text"
+                placeholder="Description..."
+                value={desc}
+                onChange={(e) => setDesc(e.target.value)}
               />
             </div>
 
             <label>
-              <input type="checkbox" checked={watermark} onChange={e => setWatermark(e.target.checked)} /> Add Watermark
+              <input
+                type="checkbox"
+                checked={watermark}
+                onChange={(e) => setWatermark(e.target.checked)}
+              />{" "}
+              Add Watermark
             </label>
 
             {watermark && (
               <div>
                 <label htmlFor="watermark-position">Watermark Position</label>
-                <select 
+                <select
                   id="watermark-position"
-                  value={watermarkPosition} 
-                  onChange={e => setWatermarkPosition(e.target.value)}
+                  value={watermarkPosition}
+                  onChange={(e) => setWatermarkPosition(e.target.value)}
                 >
                   <option value="top-left">Top Left</option>
                   <option value="top-right">Top Right</option>
@@ -325,21 +365,23 @@ function App() {
               <button
                 className="modal-upload"
                 disabled={!selectedFile}
-                onClick={() => setShowConfirmationModal(true)}>
+                onClick={() => setShowConfirmationModal(true)}
+              >
                 Upload
               </button>
 
               <button
                 className="modal-cancel"
                 onClick={() => {
-                  setSelectedFile(null)
-                  fileInputRef.current.value = null
-                  setShowModal(false)
-                  setAlt("")
-                  setDesc("")
-                  setWatermark(false)
-                  setShowConfirmationModal(false)
-                }}>
+                  setSelectedFile(null);
+                  fileInputRef.current.value = null;
+                  setShowModal(false);
+                  setAlt("");
+                  setDesc("");
+                  setWatermark(false);
+                  setShowConfirmationModal(false);
+                }}
+              >
                 Cancel
               </button>
             </div>
@@ -352,8 +394,18 @@ function App() {
           <div className="modal">
             <h3>Watermark Preview</h3>
             <div className="image-preview">
-              <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="preview-image" />
-              {watermark && <img src={watermarkImage} alt="Watermark" className={`watermark-preview ${watermarkPosition}`} />}
+              <img
+                src={URL.createObjectURL(selectedFile)}
+                alt="Preview"
+                className="preview-image"
+              />
+              {watermark && (
+                <img
+                  src={watermarkImage}
+                  alt="Watermark"
+                  className={`watermark-preview ${watermarkPosition}`}
+                />
+              )}
             </div>
             <div className="modal-actions">
               <button onClick={() => setShowPreviewModal(false)}>Close</button>
@@ -381,7 +433,9 @@ function App() {
             <p>Are you sure you want to upload this photo?</p>
             <div className="modal-actions">
               <button onClick={handleUpload}>Upload</button>
-              <button onClick={() => setShowConfirmationModal(false)}>Cancel</button>
+              <button onClick={() => setShowConfirmationModal(false)}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -396,18 +450,18 @@ function App() {
               <button
                 className="modal-upload"
                 onClick={() => {
-                  handleDelete(photoToDelete.filename)
-                  setShowDeleteModal(false)
-                  setPhotoToDelete(null)
+                  handleDelete(photoToDelete.filename);
+                  setShowDeleteModal(false);
+                  setPhotoToDelete(null);
                 }}
               >
                 Confirm
               </button>
-              <button 
+              <button
                 className="modal-cancel"
                 onClick={() => {
-                  setShowDeleteModal(false)
-                  setPhotoToDelete(null)
+                  setShowDeleteModal(false);
+                  setPhotoToDelete(null);
                 }}
               >
                 Cancel
@@ -419,7 +473,7 @@ function App() {
 
       {zoomedPhoto && (
         <div className="modal-overlay" onClick={() => setZoomedPhoto(null)}>
-          <div className="zoom-modal" onClick={e => e.stopPropagation()}>
+          <div className="zoom-modal" onClick={(e) => e.stopPropagation()}>
             <button className="close-btn" onClick={() => setZoomedPhoto(null)}>
               <RxCross2 size={20} />
             </button>
@@ -428,9 +482,7 @@ function App() {
               alt={zoomedPhoto.alt}
               className="zoomed-image"
             />
-            {zoomedPhoto.description && (
-              <p>{zoomedPhoto.description}</p>
-            )}
+            {zoomedPhoto.description && <p>{zoomedPhoto.description}</p>}
           </div>
         </div>
       )}
@@ -448,27 +500,33 @@ function App() {
             <div key={photo?.id || `placeholder-${i}`} className="photo-card">
               {photo ? (
                 <div className="photo-wrapper">
-                  <img 
-                    src={`http://localhost:773/images/${photo.filename}`} 
-                    alt={photo.alt} 
-                    onClick={() => setZoomedPhoto(photo)} 
+                  <img
+                    src={`http://localhost:773/images/${photo.filename}`}
+                    alt={photo.alt}
+                    onClick={() => setZoomedPhoto(photo)}
                   />
                   {deleting === photo.filename ? (
                     <span className="del-text">Deleting...</span>
                   ) : (
                     <>
                       {isLoggedIn && (
-                        <button className="delete-btn" data-testid="del-btn" onClick={() => {
-                          setPhotoToDelete(photo)
-                          setShowDeleteModal(true)
-                        }}>
+                        <button
+                          className="delete-btn"
+                          data-testid="del-btn"
+                          onClick={() => {
+                            setPhotoToDelete(photo);
+                            setShowDeleteModal(true);
+                          }}
+                        >
                           <FaTrashAlt size={16} />
                         </button>
                       )}
                     </>
-                  )}    
+                  )}
                   <div className="photo-overlay">
-                    {photo.description && <div className="overlay-text">{photo.description}</div>}
+                    {photo.description && (
+                      <div className="overlay-text">{photo.description}</div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -486,7 +544,9 @@ function App() {
         >
           Prev
         </button>
-        <span>Page {currentPage} of {totalPages}</span>
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
         <button
           disabled={currentPage === totalPages}
           onClick={() => handlePageChange(currentPage + 1)}
@@ -498,11 +558,14 @@ function App() {
       <section className="footer">
         <footer>
           <p>© Fernand William Citra</p>
-          <p>Made to showcase the engineering marvel of humanity and as a gallery for hobbyist.</p>
+          <p>
+            Made to showcase the engineering marvel of humanity and as a gallery
+            for hobbyist.
+          </p>
         </footer>
       </section>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
