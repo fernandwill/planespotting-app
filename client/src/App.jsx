@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react"
 import "./App.css"
 import { FaTrashAlt } from "react-icons/fa"
-import { RxCross2 } from "react-icons/rx"
+import { RxCross2, RxMoon, RxSun } from "react-icons/rx"
 
 function App() {
   const [photos, setPhotos] = useState([])
@@ -32,6 +32,30 @@ function App() {
   const [password, setPassword] = useState("")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [pageRefresh, setPageRefresh] = useState(false)
+  const [theme, setTheme] = useState("light")
+
+  useEffect(() => {
+    // Initialize theme from localStorage or system preference
+    const savedTheme = localStorage.getItem("theme")
+    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+    
+    if (savedTheme) {
+      setTheme(savedTheme)
+      document.documentElement.setAttribute("data-theme", savedTheme)
+    } else if (systemPrefersDark) {
+      setTheme("dark")
+      document.documentElement.setAttribute("data-theme", "dark")
+    } else {
+      setTheme("light")
+      document.documentElement.setAttribute("data-theme", "light")
+    }
+  }, [])
+
+  useEffect(() => {
+    // Update localStorage and document attribute when theme changes
+    localStorage.setItem("theme", theme)
+    document.documentElement.setAttribute("data-theme", theme)
+  }, [theme])
 
   useEffect(() => {
     fetch(`http://localhost:773/api/photos?page=${currentPage}&limit=8`)
@@ -139,11 +163,23 @@ function App() {
     setDeleting(null)
   }
 
+  const toggleTheme = () => {
+    setTheme(prevTheme => {
+      const newTheme = prevTheme === "light" ? "dark" : "light"
+      return newTheme
+    })
+  }
+
   return (
     <div className="app">
       <header>
         <h1>My Planespotting Gallery</h1>
         <p>Gallery of photos I have snapped of planes around the world.</p>
+        <div className="header-controls">
+          <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
+            {theme === "light" ? <RxMoon size={20} /> : <RxSun size={20} />}
+          </button>
+        </div>
       </header>
 
       {isLoggedIn && (
@@ -178,40 +214,53 @@ function App() {
         <div className="modal-overlay">
           <div className="modal">
             <h2>Login</h2>
-            <p>Username</p>
-            <input
-            type="password"
-            placeholder="Magic Word..."
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            />
-            <p>Password</p>
-            <input
-            type="password"
-            placeholder="Magic Word..."
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            />
+            <div>
+              <label htmlFor="username">Username</label>
+              <input
+                id="username"
+                type="text"
+                placeholder="Enter username..."
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                placeholder="Enter password..."
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+              />
+            </div>
             <div className="modal-actions">
               <button
-              onClick={async () => {
-                const res = await fetch("http://localhost:773/login", {method: "POST", headers: {"Content-Type": "application/json"}, credentials: "include", body: JSON.stringify({username, password})
-              })
+                onClick={async () => {
+                  const res = await fetch("http://localhost:773/login", {
+                    method: "POST", 
+                    headers: {"Content-Type": "application/json"}, 
+                    credentials: "include", 
+                    body: JSON.stringify({username, password})
+                  })
 
-              if (res.ok) {
-                setIsLoggedIn(true)
-                showToastMsg("Login success.")
-                setShowLoginModal(false)
-              } else {
-                showToastMsg("Login failed.")
-              }
-            }}>Login</button>
-            <button
-            onClick={() => setShowLoginModal(false)}>Cancel</button>
+                  if (res.ok) {
+                    setIsLoggedIn(true)
+                    showToastMsg("Login success.")
+                    setShowLoginModal(false)
+                  } else {
+                    showToastMsg("Login failed.")
+                  }
+                }}
+              >
+                Login
+              </button>
+              <button onClick={() => setShowLoginModal(false)}>Cancel</button>
             </div>
           </div>
         </div>
       )}
+      
       {showModal && (
         <div className="modal-overlay">
           <div className="modal">
@@ -228,21 +277,48 @@ function App() {
               </div>
             )}
 
-            <input type="text" placeholder="Alt Text..." value={alt} onChange={e => setAlt(e.target.value)} required />
-            <input type="text" placeholder="Description..." value={desc} onChange={e => setDesc(e.target.value)} />
+            <div>
+              <label htmlFor="alt-text">Alt Text</label>
+              <input 
+                id="alt-text"
+                type="text" 
+                placeholder="Alt Text..." 
+                value={alt} 
+                onChange={e => setAlt(e.target.value)} 
+                required 
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="description">Description</label>
+              <input 
+                id="description"
+                type="text" 
+                placeholder="Description..." 
+                value={desc} 
+                onChange={e => setDesc(e.target.value)} 
+              />
+            </div>
 
             <label>
               <input type="checkbox" checked={watermark} onChange={e => setWatermark(e.target.checked)} /> Add Watermark
             </label>
 
             {watermark && (
-              <select value={watermarkPosition} onChange={e => setWatermarkPosition(e.target.value)}>
-                <option value="top-left">Top Left</option>
-                <option value="top-right">Top Right</option>
-                <option value="center">Center</option>
-                <option value="bottom-left">Bottom Left</option>
-                <option value="bottom-right">Bottom Right</option>
-              </select>
+              <div>
+                <label htmlFor="watermark-position">Watermark Position</label>
+                <select 
+                  id="watermark-position"
+                  value={watermarkPosition} 
+                  onChange={e => setWatermarkPosition(e.target.value)}
+                >
+                  <option value="top-left">Top Left</option>
+                  <option value="top-right">Top Right</option>
+                  <option value="center">Center</option>
+                  <option value="bottom-left">Bottom Left</option>
+                  <option value="bottom-right">Bottom Right</option>
+                </select>
+              </div>
             )}
 
             <div className="modal-actions">
@@ -279,7 +355,9 @@ function App() {
               <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="preview-image" />
               {watermark && <img src={watermarkImage} alt="Watermark" className={`watermark-preview ${watermarkPosition}`} />}
             </div>
-            <button onClick={() => setShowPreviewModal(false)}>Close</button>
+            <div className="modal-actions">
+              <button onClick={() => setShowPreviewModal(false)}>Close</button>
+            </div>
           </div>
         </div>
       )}
@@ -289,7 +367,9 @@ function App() {
           <div className="modal">
             <h2>Photo Uploaded!</h2>
             <p>Your photo has been successfully added to the gallery.</p>
-            <button onClick={() => setShowSuccessModal(false)}>OK</button>
+            <div className="modal-actions">
+              <button onClick={() => setShowSuccessModal(false)}>OK</button>
+            </div>
           </div>
         </div>
       )}
@@ -314,18 +394,24 @@ function App() {
             <p>Are you sure you want to delete this photo?</p>
             <div className="modal-actions">
               <button
-              className="modal-upload"
-              onClick={() => {
-                handleDelete(photoToDelete.filename)
-                setShowDeleteModal(false)
-                setPhotoToDelete(null)
-              }}>Confirm</button>
+                className="modal-upload"
+                onClick={() => {
+                  handleDelete(photoToDelete.filename)
+                  setShowDeleteModal(false)
+                  setPhotoToDelete(null)
+                }}
+              >
+                Confirm
+              </button>
               <button 
                 className="modal-cancel"
                 onClick={() => {
                   setShowDeleteModal(false)
                   setPhotoToDelete(null)
-                }}>Cancel</button>
+                }}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -334,14 +420,16 @@ function App() {
       {zoomedPhoto && (
         <div className="modal-overlay" onClick={() => setZoomedPhoto(null)}>
           <div className="zoom-modal" onClick={e => e.stopPropagation()}>
-            <button className="close-btn" onClick={() => setZoomedPhoto(null)}><RxCross2 size={16}/></button>
+            <button className="close-btn" onClick={() => setZoomedPhoto(null)}>
+              <RxCross2 size={20} />
+            </button>
             <img
-            src={`http://localhost:773/images/${zoomedPhoto.filename}`}
-            alt={zoomedPhoto.alt}
-            className="zoomed-image"
+              src={`http://localhost:773/images/${zoomedPhoto.filename}`}
+              alt={zoomedPhoto.alt}
+              className="zoomed-image"
             />
             {zoomedPhoto.description && (
-              <p style={{ color: "#555", marginTop: "1rem" }}>{zoomedPhoto.description}</p>
+              <p>{zoomedPhoto.description}</p>
             )}
           </div>
         </div>
@@ -359,29 +447,33 @@ function App() {
           {photos.map((photo, i) => (
             <div key={photo?.id || `placeholder-${i}`} className="photo-card">
               {photo ? (
-              <div className="photo-wrapper">
-                <img src={`http://localhost:773/images/${photo.filename}`} alt={photo.alt} onClick={() => setZoomedPhoto(photo)} style={{cursor: "zoom-in"}} />
-                {deleting === photo.filename ? (
-                  <span className="del-text">Deleting...</span>
-                ) : (
-                  <>
-                  {isLoggedIn && (
-                    <button className="delete-btn" data-testid="del-btn" onClick={() => {
-                      setPhotoToDelete(photo)
-                      setShowDeleteModal(true)
-                    }}>
-                      <FaTrashAlt size={16} />
-                    </button>
-                  )}
-                  </>
-                )}    
-                <div className="photo-overlay">
-                  {photo.description && <div className="overlay-text">{photo.description}</div>}
+                <div className="photo-wrapper">
+                  <img 
+                    src={`http://localhost:773/images/${photo.filename}`} 
+                    alt={photo.alt} 
+                    onClick={() => setZoomedPhoto(photo)} 
+                  />
+                  {deleting === photo.filename ? (
+                    <span className="del-text">Deleting...</span>
+                  ) : (
+                    <>
+                      {isLoggedIn && (
+                        <button className="delete-btn" data-testid="del-btn" onClick={() => {
+                          setPhotoToDelete(photo)
+                          setShowDeleteModal(true)
+                        }}>
+                          <FaTrashAlt size={16} />
+                        </button>
+                      )}
+                    </>
+                  )}    
+                  <div className="photo-overlay">
+                    {photo.description && <div className="overlay-text">{photo.description}</div>}
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="photo-wrapper empty-slot" />
-            )}
+              ) : (
+                <div className="photo-wrapper empty-slot" />
+              )}
             </div>
           ))}
         </div>
@@ -389,14 +481,18 @@ function App() {
 
       <div className="pagination">
         <button
-        disabled={currentPage === 1}
-        onClick={() => handlePageChange(currentPage - 1)}
-        >Prev</button>
+          disabled={currentPage === 1}
+          onClick={() => handlePageChange(currentPage - 1)}
+        >
+          Prev
+        </button>
         <span>Page {currentPage} of {totalPages}</span>
         <button
-        disabled={currentPage === totalPages}
-        onClick={() => handlePageChange(currentPage + 1)}
-        >Next</button>
+          disabled={currentPage === totalPages}
+          onClick={() => handlePageChange(currentPage + 1)}
+        >
+          Next
+        </button>
       </div>
 
       <section className="footer">
